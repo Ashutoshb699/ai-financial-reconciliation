@@ -40,7 +40,7 @@ Follow these steps to clone, configure, and run the project locally on your mach
 1. Clone the Repository
 Open your terminal and clone the repository to your local system:
 
-git clone https://github.com/your-username/razorpay-buildathon.git
+git clone https://github.com/Ashutoshb699/ai-financial-reconciliation
 cd razorpay-buildathon
 
 2. Create and Activate a Virtual Environment
