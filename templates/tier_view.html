@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} Razorpay AI Controller</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .top-navbar { background-color: #212529; padding: 15px 20px; }
+        .top-navbar a { color: #f8f9fa; text-decoration: none; margin-right: 20px; font-weight: 500; }
+        .top-navbar a:hover { color: #0d6efd; }
+        .table-wrapper { background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-top: 20px; }
+        .tier-badge { font-size: 0.85rem; padding: 6px 10px; border-radius: 4px; font-weight: 600; }
+        .bg-sql { background-color: #198754; color: white; }
+        .bg-fuzzy { background-color: #0dcaf0; color: #000; }
+        .bg-ai { background-color: #ffc107; color: #000; }
+    </style>
+</head>
+<body>
+
+    <nav class="top-navbar d-flex align-items-center">
+        <span style="color: #0d6efd; font-weight: bold; font-size: 1.2rem; margin-right: 30px;">Razorpay AI Controller</span>
+        <a href="{{ url_for('dashboard') }}">Overview</a>
+        <a href="{{ url_for('view_tier', tier_name='sql') }}">Tier 1: SQL Matches</a>
+        <a href="{{ url_for('view_tier', tier_name='fuzzy') }}">Tier 2: Fuzzy Matches</a>
+        <a href="{{ url_for('view_tier', tier_name='ai') }}">Tier 3: AI Matches</a>
+        <a href="{{ url_for('manual_queue')}}">Tier 4: Manual Review</a> 
+    </nav>
+
+    <div class="container-fluid px-5 py-4">
+        
+        <!-- Dynamic Header area -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="m-0" style="color: #2c3e50;">{{ title }}</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Dashboard</a>
+        </div>
+
+        <!-- Filtered Data Table -->
+        <div class="table-wrapper">
+            <table class="table table-hover align-middle m-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ORDER REF</th>
+                        <th>CUSTOMER</th>
+                        <th>INTERNAL (₹)</th>
+                        <th>SETTLED (₹)</th>
+                        <th>RESOLUTION TIER</th>
+                        <th>CONFIDENCE</th>
+                        <th>AUDIT REASONING</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Jinja2 Loop to inject the global records -->
+                    {% for record in records %}
+                    <tr>
+                        <td>
+                            <strong>{{ record.order_id }}</strong><br>
+                            <small class="text-muted">{{ record.settlement_id }}</small>
+                        </td>
+                        <td>{{ record.customer_name }}</td>
+                        <td>{{ "%.2f"|format(record.internal_amount|float) }}</td>
+                        <td>{{ "%.2f"|format(record.settled_amount|float) }}</td>
+                        
+                        <!-- Dynamic Badge Formatting based on the tier -->
+                        <td>
+                            {% if record.reconciliation_tier == 'TIER_1_SQL' %}
+                                <span class="tier-badge bg-sql">SQL Match</span>
+                            {% elif record.reconciliation_tier == 'TIER_2_FUZZY' %}
+                                <span class="tier-badge bg-fuzzy">Fuzzy Match</span>
+                            {% elif record.reconciliation_tier == 'TIER_3_AI' %}
+                                <span class="tier-badge bg-ai">AI Resolved</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td>{{ (record.confidence_score * 100)|int }}%</td>
+                        
+                        <!-- Pulling discrepancy type from your DB schema -->
+                        <td class="text-muted" style="font-size: 0.9rem;">
+                            {{ record.discrepancy_type }}
+                        </td>
+                    </tr>
+                    
+                    <!-- Fallback if the array is empty (e.g., pipeline hasn't run yet) -->
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <h5 class="fw-normal">No records found for this tier.</h5>
+                            <p class="mb-0">Run the reconciliation pipeline from the Overview dashboard to populate data.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

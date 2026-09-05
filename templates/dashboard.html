@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<br>
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h2 class="mb-0">Reconciliation Overview</h2>
+        <p class="text-muted">Total Ledger Records: <strong>{{ total_internal }}</strong> | Total Gateway Records: <strong>{{ total_gateway }}</strong></p>
+    </div>
+    <div class="col-md-6 text-end d-flex justify-content-end gap-2">
+        <form action="{{ url_for('generates_data') }}" method="POST">
+            <button type="submit" class="btn btn-outline-secondary shadow-sm">1. Fetch / Generate Data</button>
+        </form>
+        <form action="{{ url_for('trigger_pipeline') }}" method="POST">
+            <button type="submit" class="btn btn-primary shadow-sm">2. Execute Reconciliation Pipeline</button>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4 border-0">
+    <div class="card-body">
+        <h5 class="card-title">Automation Efficiency: <span class="text-success">{{ total_reconciled_pct }}%</span></h5>
+        <div class="progress" style="height: 25px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ sql_pct }}%">SQL ({{ sql_pct }}%)</div>
+            <div class="progress-bar bg-info" role="progressbar" style="width: {{ fuzzy_pct }}%">Fuzzy ({{ fuzzy_pct }}%)</div>
+            <div class="progress-bar bg-warning text-dark" role="progressbar" style="width: {{ ai_pct }}%">AI ({{ ai_pct }}%)</div>
+            <div class="progress-bar bg-danger" role="progressbar" style="width: {{ manual_pct }}%">Manual ({{ manual_pct }}%)</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-success border-4">
+            <div class="card-body">
+                <h6 class="text-muted">Tier 1: SQL Matched</h6>
+                <h3>{{ sql_count }} <small class="text-muted fs-6">records</small></h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-info border-4">
+            <div class="card-body">
+                <h6 class="text-muted">Tier 2: Fuzzy Matched</h6>
+                <h3>{{ fuzzy_count }} <small class="text-muted fs-6">records</small></h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-warning border-4">
+            <div class="card-body">
+                <h6 class="text-muted">Tier 3: AI Resolved</h6>
+                <h3>{{ ai_count }} <small class="text-muted fs-6">records</small></h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-danger border-4">
+            <div class="card-body">
+                <h6 class="text-muted">Tier 4: Manual Review</h6>
+                <h3>{{ manual_count }} <small class="text-muted fs-6">records</small></h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0">Recent Audit Log</h5>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Order Ref</th>
+                    <th>Customer</th>
+                    <th>Internal (₹)</th>
+                    <th>Settled (₹)</th>
+                    <th>Resolution Tier</th>
+                    <th>Confidence</th>
+                    <th>Audit Reasoning</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in results %}
+                <tr>
+                    <td><strong>{{ row.order_id }}</strong><br><small class="text-muted">{{ row.settlement_id }}</small></td>
+                    <td>{{ row.customer_name }}</td>
+                    <td>{{ "%.2f"|format(row.internal_amount) }}</td>
+                    <td>{{ "%.2f"|format(row.settled_amount) }}</td>
+                    <td>
+                        <!-- Dynamic Badges using Jinja2 logic -->
+                        {% if row.reconciliation_tier == 'TIER_1_SQL' %}
+                            <span class="badge bg-success">Tier 1 (SQL)</span>
+                        {% elif row.reconciliation_tier == 'TIER_2_FUZZY' %}
+                            <span class="badge bg-info">Tier 2 (Fuzzy)</span>
+                        {% elif row.reconciliation_tier == 'TIER_3_AI' %}
+                            <span class="badge bg-warning text-dark">Tier 3 (AI)</span>
+                        {% else %}
+                            <span class="badge bg-danger">Tier 4 (Manual)</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ "%.0f"|format(row.confidence_score * 100) }}%</td>
+                    <td class="audit-text">{{ row.audit_reasoning }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">No records found. Click 'Generate Data' to begin.</td>
+                </tr>
+                {% endfor %}
+            </span>
+        </table>
+    </div>
+</div>
+{% endblock %}
