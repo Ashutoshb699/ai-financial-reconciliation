@@ -46,11 +46,11 @@ cd razorpay-buildathon
 2. Create and Activate a Virtual Environment
 It is recommended to run the app inside an isolated Python virtual environment:
 
-# Windows
+**Windows**
 python -m venv venv
 venv\Scripts\activate
 
-# macOS / Linux
+**macOS / Linux**
 python3 -m venv venv
 source venv/bin/activate
 
